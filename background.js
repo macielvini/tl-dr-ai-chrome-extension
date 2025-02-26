@@ -34,7 +34,6 @@ function injectHtml(content) {
 }
 
 chrome.runtime.onMessage.addListener((message) => {
-  console.log("Resumator: Mensagem recebida:", message);
   if (message.content) {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       // Injetar script na aba ativa para acessar o DOM
@@ -63,25 +62,22 @@ function renderAiResponse(response) {
   overlayBg.style.left = 0;
   overlayBg.style.width = "100vw";
   overlayBg.style.height = "100vh";
-  overlayBg.style.zIndex = 100;
+  overlayBg.style.zIndex = 9999;
   overlayBg.style.backgroundColor = "rgba(0, 0, 0, 0.35)";
   overlayBg.style.display = "flex";
   overlayBg.style.justifyContent = "center";
   overlayBg.style.alignItems = "center";
 
   const overlay = document.createElement("div");
-  overlay.style.width = "600px";
+  overlay.style.width = "80%";
   overlay.style.height = "min-content";
   overlay.style.maxHeight = "600px";
   overlay.style.borderRadius = "10px";
   overlay.style.padding = "16px";
   overlay.style.backgroundColor = "#121212";
   overlay.style.color = "rgb(255, 255, 255, 0.87)";
-  //   overlay.style.position = "fixed";
-  //   overlay.style.top = "50%";
-  //   overlay.style.left = "50%";
-  //   overlay.style.transform = "translate(-50%, -50%)";
-  overlay.style.overflowY = "hidden";
+  overlay.style.outline = "1px solid rgb(255, 255, 255, 0.80)";
+  overlay.style.overflow = "hidden";
 
   const title = document.createElement("h1");
   title.innerText = "Resposta da IA:";
@@ -89,18 +85,19 @@ function renderAiResponse(response) {
   const closeBtn = document.createElement("button");
   closeBtn.innerText = "Fechar";
   closeBtn.style.fontSize = "16px";
+  closeBtn.style.marginTop = "16px";
   closeBtn.addEventListener("click", () => {
     overlayBg.remove();
   });
 
   const text = document.createElement("div");
-  text.style.overflowY = "scroll";
+  text.style.overflow = "auto";
   text.style.height = "min-content";
   text.style.maxHeight = "400px";
-  text.style.whiteSpace = "wrap";
+  text.style.whiteSpace = "normal";
   text.style.width = "100%";
-  text.style.fontFamily = "monospace";
-  text.style.padding = "14px 0 16px";
+  text.style.fontSize = "16px";
+  text.style.padding = "14px 12px 16px 0";
   text.innerHTML = response;
 
   overlay.appendChild(title);
@@ -226,12 +223,16 @@ function selectMode() {
   }
 
   async function getAiResponse(question) {
-    const API_KEY = "INSERT YOUR GEMINI KEY HERE";
+    const API_KEY = "your api key goes here";
     const MODEL = "gemini-2.0-flash"; // fell free to change https://ai.google.dev/gemini-api/docs/models/geminir
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
-    const prompt =
-      "A partir do texto informado, gere um resumo bem estruturado mas de poucas linhas, destacando pontos importantes no texto. Mantenha a lingua original do texto.";
+    const prompt = `A partir do texto informado, gere um resumo bem estruturado na lingua original do texto.
+                    Descreva sobre o que se trata e destaque pontos importantes no texto.
+                    Traga trechos importantes do texto original se fizer sentido.
+                    Para quebra de linhas, insira <br>. Para formatação em markdown, use formatação com tags HTML.
+                    Desconsidere texto de anúncios e ofertas.
+                    `;
 
     const requestBody = {
       contents: [{ role: "user", parts: [{ text: question }] }],
